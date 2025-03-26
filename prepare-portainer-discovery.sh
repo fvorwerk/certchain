@@ -46,7 +46,7 @@ services:
     restart: always
     working_dir: /app
     command: >
-      sh -c "npm ci --production && node server.js"
+      sh -c "npm install --production && node server.js"
     environment:
       - PORT=4000
     volumes:
@@ -69,7 +69,7 @@ services:
     restart: always
     working_dir: /app
     command: >
-      sh -c "npm ci --production && node index.js"
+      sh -c "npm install --production && node index.js"
     environment:
       - NODE_ID=1
       - PORT=3000

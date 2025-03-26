@@ -14,7 +14,7 @@ cp -r /app_source/.* /app/ 2>/dev/null || true
 
 # Install dependencies
 echo "Installing dependencies..."
-npm ci --production
+npm install --production
 
 # Start the node
 echo "Starting CertChain node..."

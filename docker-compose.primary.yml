@@ -7,7 +7,7 @@ services:
     restart: always
     working_dir: /app
     command: >
-      sh -c "npm ci --production && node server.js"
+      sh -c "npm install --production && node server.js"
     environment:
       - PORT=4000
     volumes:
@@ -29,8 +29,9 @@ services:
     image: node:16-alpine
     restart: always
     working_dir: /app
+    # Simplified startup approach
     command: >
-      sh -c "mkdir -p config && cp -r /app_source/config/* /app/config/ && npm ci --production && node index.js"
+      sh -c "cd /app && ls -la && npm install && node index.js"
     environment:
       - NODE_ID=1
       - PORT=3000
@@ -41,15 +42,11 @@ services:
       - ADMIN_API_KEY=${ADMIN_API_KEY:-admin_key_secure_1}
       - BLOCK_INTERVAL=${BLOCK_INTERVAL:-86400}
     volumes:
-      - ./:/app_source
-      - node1_data:/app/blocks
-      - node1_config:/app/config
-      - node_modules:/app/node_modules
-      - ./index.js:/app/index.js
-      - ./package.json:/app/package.json
-      - ./blockchain:/app/blockchain
-      - ./credit:/app/credit
-      - ./services:/app/services
+      # Simplified volume mounting - mount the whole directory directly
+      - ./:/app:ro  # Mount as read-only since we write to specific volumes below
+      - node1_data:/app/blocks:rw
+      - node1_config:/app/config:rw
+      - node_modules:/app/node_modules:rw
     networks:
       - certchain_network
     depends_on:

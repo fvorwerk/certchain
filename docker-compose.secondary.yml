@@ -6,7 +6,7 @@ services:
     restart: always
     working_dir: /app
     command: >
-      sh -c "mkdir -p config && cp -r /app_source/config/* /app/config/ && npm ci --production && node index.js"
+      sh -c "mkdir -p config && cp -r /app_source/config/* /app/config/ && npm install --production && node index.js"
     environment:
       - NODE_ID=${NODE_ID:-auto}
       - PORT=3000
