@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CertChain Bank Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .token-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+    }
+    .token-card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      background-color: #f8f9fa;
+    }
+    .token-card.spent {
+      background-color: #e9ecef;
+      opacity: 0.7;
+    }
+    .token-id {
+      font-size: 0.7rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stat-card {
+      border-left: 4px solid #007bff;
+      background-color: #f8f9fa;
+    }
+    .nav-pills .nav-link.active {
+      background-color: #28a745;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="/">CertChain</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Blockchain Explorer</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/wallet.html">Certificate Wallet</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/bank-admin.html">Bank Admin</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="bank-admin-root"></div>
+  
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script type="text/babel" src="BankAdmin.js"></script>
+  <script type="text/babel">
+    const root = ReactDOM.createRoot(document.getElementById('bank-admin-root'));
+    root.render(<BankAdmin />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Discovery service 
+  discovery:
+    image: node:16-alpine
+    restart: always
+    working_dir: /app
+    command: >
+      sh -c "npm ci --production && node server.js"
+    environment:
+      - PORT=4000
+    volumes:
+      - ./discovery-service:/app
+      - discovery_data:/app/data
+      - discovery_modules:/app/node_modules
+    networks:
+      - certchain_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.discovery.rule=Host(`discovery.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.discovery.entrypoints=websecure"
+      - "traefik.http.routers.discovery.tls=true"
+      - "traefik.http.routers.discovery.tls.certresolver=le"
+      - "traefik.http.services.discovery.loadbalancer.server.port=4000"
+
+  # Primary node (node1)
+  node1:
+    image: node:16-alpine
+    restart: always
+    working_dir: /app
+    command: >
+      sh -c "npm ci --production && node index.js"
+    environment:
+      - NODE_ID=1
+      - PORT=3000
+      - NODE_ENV=production
+      - PUBLIC_URL=https://node1.${DOMAIN_NAME}
+      - DISCOVERY_SERVICE=https://discovery.${DOMAIN_NAME}
+      - AUTO_REGISTER=true
+      - ADMIN_API_KEY=${ADMIN_API_KEY:-admin_key_secure_1}
+      - BLOCK_INTERVAL=${BLOCK_INTERVAL:-86400}
+    volumes:
+      - ./:/app
+      - node1_data:/app/blocks
+      - node1_config:/app/config
+      - node_modules:/app/node_modules
+    networks:
+      - certchain_network
+    depends_on:
+      - discovery
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.node1.rule=Host(`node1.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.node1.entrypoints=websecure"
+      - "traefik.http.routers.node1.tls=true"
+      - "traefik.http.routers.node1.tls.certresolver=le"
+      - "traefik.http.services.node1.loadbalancer.server.port=3000"
+
+networks:
+  certchain_network:
+    external: ${EXTERNAL_NETWORK:-false}
+    name: ${NETWORK_NAME:-certchain_network}
+
+volumes:
+  discovery_data:
+  discovery_modules:
+  node1_data:
+  node1_config:
+  node_modules:

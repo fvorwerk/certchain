@@ -1,0 +1,31 @@
+# Environment variables
+.env
+
+# Node modules
+node_modules/
+
+# Data directories
+blocks/
+data/
+
+# Log files
+*.log
+logs/
+
+# Certificate files
+*.pem
+*.key
+*.crt
+
+# Backup files
+*.bak
+*-backup*
+
+# Generated zips and packages
+*.zip
+portainer-deploy/
+certchain-package/
+
+# IDE files
+.vscode/
+.idea/

@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # Discovery service (optional but recommended)
+  discovery:
+    build: ./discovery-service # You'd need to create this
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+    volumes:
+      - discovery_data:/app/data
+    networks:
+      - certchain_network
+
+  # Node 1 (primary)
+  node1:
+    build: .
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ID=1
+      - PORT=3000
+      - NODE_ENV=production
+      - PUBLIC_URL=http://node1:3000
+      - DISCOVERY_SERVICE=http://discovery:4000
+      - AUTO_REGISTER=true
+      - ADMIN_API_KEY=admin_key_secure_1
+      - BLOCK_INTERVAL=300 # 5 minutes in seconds
+    volumes:
+      - node1_data:/app/blocks
+      - node1_config:/app/config
+    networks:
+      - certchain_network
+    depends_on:
+      - discovery
+
+  # Node 2
+  node2:
+    build: .
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ID=2
+      - PORT=3000
+      - NODE_ENV=production
+      - PUBLIC_URL=http://node2:3000
+      - DISCOVERY_SERVICE=http://discovery:4000
+      - AUTO_REGISTER=true
+      - ADMIN_API_KEY=admin_key_secure_2
+      - SEED_NODES=http://node1:3000
+      - BLOCK_INTERVAL=300
+    volumes:
+      - node2_data:/app/blocks
+      - node2_config:/app/config
+    networks:
+      - certchain_network
+    depends_on:
+      - node1
+
+  # Node 3
+  node3:
+    build: .
+    ports:
+      - "3003:3000"
+    environment:
+      - NODE_ID=3
+      - PORT=3000
+      - NODE_ENV=production
+      - PUBLIC_URL=http://node3:3000
+      - DISCOVERY_SERVICE=http://discovery:4000
+      - AUTO_REGISTER=true
+      - ADMIN_API_KEY=admin_key_secure_3
+      - SEED_NODES=http://node1:3000,http://node2:3000
+      - BLOCK_INTERVAL=300
+    volumes:
+      - node3_data:/app/blocks
+      - node3_config:/app/config
+    networks:
+      - certchain_network
+    depends_on:
+      - node2
+
+networks:
+  certchain_network:
+    driver: bridge
+
+volumes:
+  discovery_data:
+  node1_data:
+  node1_config:
+  node2_data:
+  node2_config:
+  node3_data:
+  node3_config:

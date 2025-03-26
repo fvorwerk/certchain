@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CertChain Deployment Generator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        .form-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border-radius: 0.25rem;
+            background-color: #f8f9fa;
+        }
+        .hidden {
+            display: none;
+        }
+        #generated-files {
+            margin-top: 2rem;
+        }
+        .code-block {
+            background-color: #272822;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .download-btn {
+            margin-top: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="text-center mb-4">
+                    <h1>CertChain Deployment Generator</h1>
+                    <p class="lead">Generate configuration files for your CertChain node deployment</p>
+                </div>
+
+                <div class="form-section">
+                    <h3>Node Configuration</h3>
+                    <div class="mb-3">
+                        <label for="nodeType" class="form-label">Node Type</label>
+                        <select class="form-select" id="nodeType">
+                            <option value="primary">Primary Node (with Discovery Service)</option>
+                            <option value="secondary">Secondary Node</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="domainName" class="form-label">Domain Name</label>
+                        <input type="text" class="form-control" id="domainName" placeholder="certchain.example.com">
+                    </div>
+
+                    <div class="mb-3 secondary-only hidden">
+                        <label for="nodeId" class="form-label">Node ID</label>
+                        <input type="number" class="form-control" id="nodeId" value="2" min="2">
+                    </div>
+
+                    <div class="mb-3 secondary-only hidden">
+                        <label for="seedNodes" class="form-label">Seed Nodes</label>
+                        <input type="text" class="form-control" id="seedNodes" placeholder="https://node1.your-domain.com">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Network Configuration</h3>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="externalNetwork" checked>
+                            <label class="form-check-label" for="externalNetwork">
+                                Use existing external network
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="networkNameContainer">
+                        <label for="networkName" class="form-label">Network Name</label>
+                        <input type="text" class="form-control" id="networkName" value="traefik_network">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Traefik Configuration</h3>
+                    <div class="mb-3">
+                        <label for="certResolver" class="form-label">Certificate Resolver</label>
+                        <input type="text" class="form-control" id="certResolver" value="le">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Blockchain Settings</h3>
+                    <div class="mb-3">
+                        <label for="blockInterval" class="form-label">Block Interval (seconds)</label>
+                        <input type="number" class="form-control" id="blockInterval" value="86400">
+                        <div class="form-text">86400 = 24 hours (1 day)</div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Security</h3>
+                    <div class="mb-3">
+                        <label for="adminApiKey" class="form-label">Admin API Key</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="adminApiKey">
+                            <button class="btn btn-outline-secondary" type="button" id="generateApiKey">Generate</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" id="generateBtn">Generate Configuration Files</button>
+                </div>
+
+                <div id="generated-files" class="hidden">
+                    <h3 class="mt-4 mb-3">Generated Files</h3>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">.env</h5>
+                            <button class="btn btn-sm btn-primary" id="downloadEnv">Download</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block" id="envFile"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">docker-compose.yml</h5>
+                            <button class="btn btn-sm btn-primary" id="downloadCompose">Download</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block" id="composeFile"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h5>Deployment Instructions</h5>
+                        <ol>
+                            <li>Download both files</li>
+                            <li>Upload these files to your server in the same directory</li>
+                            <li>Deploy with: <code>docker-compose up -d</code></li>
+                            <li>Or deploy using Portainer by uploading the docker-compose.yml file and setting environment variables</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show/hide secondary node fields based on node type selection
+        document.getElementById('nodeType').addEventListener('change', function() {
+            const secondaryFields = document.querySelectorAll('.secondary-only');
+            if (this.value === 'secondary') {
+                secondaryFields.forEach(field => field.classList.remove('hidden'));
+            } else {
+                secondaryFields.forEach(field => field.classList.add('hidden'));
+            }
+        });
+
+        // Toggle network name field based on external network checkbox
+        document.getElementById('externalNetwork').addEventListener('change', function() {
+            const networkNameField = document.getElementById('networkName');
+            if (this.checked) {
+                networkNameField.value = 'traefik_network';
+            } else {
+                networkNameField.value = 'certchain_network';
+            }
+        });
+
+        // Generate random API key
+        document.getElementById('generateApiKey').addEventListener('click', function() {
+            const randomKey = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+            document.getElementById('adminApiKey').value = randomKey;
+        });
+        
+        // Generate a random API key on page load
+        document.getElementById('generateApiKey').click();
+
+        // Generate configuration files
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            // Get form values
+            const nodeType = document.getElementById('nodeType').value;
+            const domainName = document.getElementById('domainName').value;
+            const nodeId = nodeType === 'primary' ? 1 : document.getElementById('nodeId').value;
+            const externalNetwork = document.getElementById('externalNetwork').checked;
+            const networkName = document.getElementById('networkName').value;
+            const certResolver = document.getElementById('certResolver').value;
+            const blockInterval = document.getElementById('blockInterval').value;
+            const adminApiKey = document.getElementById('adminApiKey').value;
+            const seedNodes = nodeType === 'secondary' ? document.getElementById('seedNodes').value : '';
+
+            // Validate required fields
+            if (!domainName) {
+                alert('Please enter a domain name');
+                return;
+            }
+
+            // Generate .env file
+            const envContent = generateEnvFile(nodeType, domainName, nodeId, externalNetwork, 
+                                              networkName, blockInterval, adminApiKey, seedNodes);
+            
+            // Generate docker-compose.yml file
+            const composeContent = generateComposeFile(nodeType, domainName, nodeId, 
+                                                      externalNetwork, networkName, 
+                                                      certResolver, blockInterval);
+            
+            // Display generated files
+            document.getElementById('envFile').textContent = envContent;
+            document.getElementById('composeFile').textContent = composeContent;
+            document.getElementById('generated-files').classList.remove('hidden');
+            
+            // Scroll to the generated files
+            document.getElementById('generated-files').scrollIntoView({ behavior: 'smooth' });
+            
+            // Set up download buttons
+            setupDownloadButton('downloadEnv', envContent, `.env`);
+            setupDownloadButton('downloadCompose', composeContent, `docker-compose.yml`);
+        });
+
+        function generateEnvFile(nodeType, domainName, nodeId, externalNetwork, 
+                                networkName, blockInterval, adminApiKey, seedNodes) {
+            let publicUrl = `https://node${nodeId}.${domainName}`;
+            let discoveryService = `https://discovery.${domainName}`;
+            
+            return `# =============================
+# CertChain Node Configuration
+# =============================
+
+# Domain Configuration
+DOMAIN_NAME=${domainName}
+
+# Node Identity
+NODE_ID=${nodeId}
+NODE_ENV=production
+
+# Network Configuration
+PORT=3000
+PUBLIC_URL=${publicUrl}
+EXTERNAL_NETWORK=${externalNetwork}
+NETWORK_NAME=${networkName}
+
+# Discovery Service
+DISCOVERY_SERVICE=${discoveryService}
+AUTO_REGISTER=true
+
+# Peer Configuration
+${nodeType === 'secondary' ? `SEED_NODES=${seedNodes}` : '# SEED_NODES='}
+
+# Security
+ADMIN_API_KEY=${adminApiKey}
+
+# Blockchain Settings
+BLOCK_INTERVAL=${blockInterval}`;
+        }
+
+        function generateComposeFile(nodeType, domainName, nodeId, externalNetwork, 
+                                    networkName, certResolver, blockInterval) {
+            if (nodeType === 'primary') {
+                return `version: '3.8'
+
+services:
+  # Discovery service 
+  discovery:
+    image: node:16-alpine
+    restart: always
+    working_dir: /app
+    command: >
+      sh -c "npm ci --production && node server.js"
+    environment:
+      - PORT=4000
+    volumes:
+      - ./discovery-service:/app
+      - discovery_data:/app/data
+      - discovery_modules:/app/node_modules
+    networks:
+      - certchain_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.discovery.rule=Host(\`discovery.${domainName}\`)"
+      - "traefik.http.routers.discovery.entrypoints=websecure"
+      - "traefik.http.routers.discovery.tls=true"
+      - "traefik.http.routers.discovery.tls.certresolver=${certResolver}"
+      - "traefik.http.services.discovery.loadbalancer.server.port=4000"
+
+  # Primary node (node1)
+  node1:
+    image: node:16-alpine
+    restart: always
+    working_dir: /app
+    command: >
+      sh -c "npm ci --production && node index.js"
+    environment:
+      - NODE_ID=1
+      - PORT=3000
+      - NODE_ENV=production
+      - PUBLIC_URL=https://node1.${domainName}
+      - DISCOVERY_SERVICE=https://discovery.${domainName}
+      - AUTO_REGISTER=true
+      - ADMIN_API_KEY=\${ADMIN_API_KEY}
+      - BLOCK_INTERVAL=${blockInterval}
+    volumes:
+      - ./:/app
+      - node1_data:/app/blocks
+      - node1_config:/app/config
+      - node_modules:/app/node_modules
+    networks:
+      - certchain_network
+    depends_on:
+      - discovery
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.node1.rule=Host(\`node1.${domainName}\`)"
+      - "traefik.http.routers.node1.entrypoints=websecure"
+      - "traefik.http.routers.node1.tls=true"
+      - "traefik.http.routers.node1.tls.certresolver=${certResolver}"
+      - "traefik.http.services.node1.loadbalancer.server.port=3000"
+
+networks:
+  certchain_network:
+    external: ${externalNetwork}
+    name: ${networkName}
+
+volumes:
+  discovery_data:
+  discovery_modules:
+  node1_data:
+  node1_config:
+  node_modules:`;
+            } else {
+                return `version: '3.8'
+
+services:
+  node:
+    image: node:16-alpine
+    restart: always
+    working_dir: /app
+    command: >
+      sh -c "npm ci --production && node index.js"
+    environment:
+      - NODE_ID=${nodeId}
+      - PORT=3000
+      - NODE_ENV=production
+      - PUBLIC_URL=https://node${nodeId}.${domainName}
+      - DISCOVERY_SERVICE=https://discovery.${domainName}
+      - AUTO_REGISTER=true
+      - ADMIN_API_KEY=\${ADMIN_API_KEY}
+      - SEED_NODES=\${SEED_NODES}
+      - BLOCK_INTERVAL=${blockInterval}
+    volumes:
+      - ./:/app
+      - node_data:/app/blocks
+      - node_config:/app/config
+      - node_modules:/app/node_modules
+    networks:
+      - certchain_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.node${nodeId}.rule=Host(\`node${nodeId}.${domainName}\`)"
+      - "traefik.http.routers.node${nodeId}.entrypoints=websecure"
+      - "traefik.http.routers.node${nodeId}.tls=true"
+      - "traefik.http.routers.node${nodeId}.tls.certresolver=${certResolver}"
+      - "traefik.http.services.node${nodeId}.loadbalancer.server.port=3000"
+
+networks:
+  certchain_network:
+    external: ${externalNetwork}
+    name: ${networkName}
+
+volumes:
+  node_data:
+  node_config:
+  node_modules:`;
+            }
+        }
+
+        function setupDownloadButton(buttonId, content, filename) {
+            document.getElementById(buttonId).addEventListener('click', function() {
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+    </script>
+</body>
+</html>
