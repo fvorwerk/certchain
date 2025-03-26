@@ -6,7 +6,7 @@ services:
     restart: always
     working_dir: /app
     command: >
-      sh -c "npm ci --production && node index.js"
+      sh -c "mkdir -p config && cp -r /app_source/config/* /app/config/ && npm ci --production && node index.js"
     environment:
       - NODE_ID=${NODE_ID:-auto}
       - PORT=3000
@@ -18,10 +18,16 @@ services:
       - SEED_NODES=${SEED_NODES:-https://node1.${DOMAIN_NAME}}
       - BLOCK_INTERVAL=${BLOCK_INTERVAL:-86400}
     volumes:
-      - ./:/app
+      - ./:/app_source  # Mount source files to a different location
+      - ./config:/app/config  # Explicitly mount config directory
       - node_data:/app/blocks
       - node_config:/app/config
       - node_modules:/app/node_modules
+      - ./index.js:/app/index.js  # Explicitly mount index.js
+      - ./package.json:/app/package.json  # Explicitly mount package.json
+      - ./blockchain:/app/blockchain  # Explicitly mount blockchain directory
+      - ./credit:/app/credit  # Explicitly mount credit directory
+      - ./services:/app/services  # Explicitly mount services directory
     networks:
       - certchain_network
     labels:
