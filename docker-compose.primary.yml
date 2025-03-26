@@ -29,8 +29,9 @@ services:
     image: node:16-alpine
     restart: always
     working_dir: /app
-    command: /app_source/start-node.sh
-    environment:config/* /app/config/ && npm ci --production && node index.js"
+    command: >
+      sh -c "mkdir -p config && cp -r /app_source/config/* /app/config/ && npm ci --production && node index.js"
+    environment:
       - NODE_ID=1
       - PORT=3000
       - NODE_ENV=production
@@ -40,33 +41,33 @@ services:
       - ADMIN_API_KEY=${ADMIN_API_KEY:-admin_key_secure_1}
       - BLOCK_INTERVAL=${BLOCK_INTERVAL:-86400}
     volumes:
-      - ./:/app_source  # Mount source files to a different location
-      - node1_data:/app/blocks_source  # Mount source files to a different location
-      - node1_config:/app/config# Explicitly mount config directory
+      - ./:/app_source
+      - node1_data:/app/blocks
+      - node1_config:/app/config
       - node_modules:/app/node_modules
+      - ./index.js:/app/index.js
+      - ./package.json:/app/package.json
+      - ./blockchain:/app/blockchain
+      - ./credit:/app/credit
+      - ./services:/app/services
     networks:
-      - certchain_networkmodules:/app/node_modules
-    depends_on:ndex.js  # Explicitly mount index.js
-      - discoveryge.json:/app/package.json  # Explicitly mount package.json
-    labels:ain:/app/blockchain  # Explicitly mount blockchain directory
-      - "traefik.enable=true"redit:/app/credit  # Explicitly mount credit directory
-      - "traefik.http.routers.node1.rule=Host(`node1.${DOMAIN_NAME}`)"ces  # Explicitly mount services directory
+      - certchain_network
+    depends_on:
+      - discovery
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.node1.rule=Host(`node1.${DOMAIN_NAME}`)"
       - "traefik.http.routers.node1.entrypoints=websecure"
       - "traefik.http.routers.node1.tls=true"
       - "traefik.http.routers.node1.tls.certresolver=le"
       - "traefik.http.services.node1.loadbalancer.server.port=3000"
 
-networks:      - "traefik.enable=true"
-  certchain_network:traefik.http.routers.node1.rule=Host(`node1.${DOMAIN_NAME}`)"
-    external: ${EXTERNAL_NETWORK:-false}p.routers.node1.entrypoints=websecure"
-    name: ${NETWORK_NAME:-certchain_network}true"
-resolver=le"
-volumes:      - "traefik.http.services.node1.loadbalancer.server.port=3000"
-  discovery_data:
-  discovery_modules:
-  node1_data:
-  node1_config: ${EXTERNAL_NETWORK:-false}
-  node_modules:WORK_NAME:-certchain_network}
+networks:
+  certchain_network:
+    external: ${EXTERNAL_NETWORK:-false}
+    name: ${NETWORK_NAME:-certchain_network}
+
+volumes:
   discovery_data:
   discovery_modules:
   node1_data:
