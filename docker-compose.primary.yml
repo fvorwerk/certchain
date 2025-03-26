@@ -29,9 +29,10 @@ services:
     image: node:16-alpine
     restart: always
     working_dir: /app
-    # Simplified startup approach
+    # Change the command to copy files instead of mounting read-only
     command: >
-      sh -c "cd /app && ls -la && npm install && node index.js"
+      sh -c "mkdir -p /app && cp -r /app_source/* /app/ && 
+             npm install --production && node index.js"
     environment:
       - NODE_ID=1
       - PORT=3000
@@ -42,11 +43,10 @@ services:
       - ADMIN_API_KEY=${ADMIN_API_KEY:-admin_key_secure_1}
       - BLOCK_INTERVAL=${BLOCK_INTERVAL:-86400}
     volumes:
-      # Simplified volume mounting - mount the whole directory directly
-      - ./:/app:ro  # Mount as read-only since we write to specific volumes below
-      - node1_data:/app/blocks:rw
-      - node1_config:/app/config:rw
-      - node_modules:/app/node_modules:rw
+      - ./:/app_source  # Source files in a different directory
+      - node1_data:/app/blocks  # Remove the :rw suffix, it's the default
+      - node1_config:/app/config
+      - node_modules:/app/node_modules
     networks:
       - certchain_network
     depends_on:
