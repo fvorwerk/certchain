@@ -16,11 +16,19 @@ class DiscoveryService {
         }
 
         try {
+            // Add TLS workaround for Node.js
+            const httpsAgent = new require('https').Agent({
+                rejectUnauthorized: process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0',
+                // Allow more TLS protocols
+                secureProtocol: 'TLS_method',
+                secureOptions: require('constants').SSL_OP_NO_SSLv3 | require('constants').SSL_OP_NO_SSLv2
+            });
+
             const response = await axios.post(`${this.discoveryUrl}/register`, {
                 nodeUrl: this.publicUrl,
                 capabilities: ['certificates', 'credits'],
                 nodeId: process.env.NODE_ID || 'unknown'
-            });
+            }, { httpsAgent });
             
             console.log('Successfully registered with discovery service:', response.data);
             this.registered = true;
@@ -39,7 +47,13 @@ class DiscoveryService {
         }
 
         try {
-            const response = await axios.get(`${this.discoveryUrl}/nodes`);
+            const httpsAgent = new require('https').Agent({
+                rejectUnauthorized: process.env.NODE_TLS_REJECT_UNAUTHORIZED !== '0',
+                secureProtocol: 'TLS_method',
+                secureOptions: require('constants').SSL_OP_NO_SSLv3 | require('constants').SSL_OP_NO_SSLv2
+            });
+
+            const response = await axios.get(`${this.discoveryUrl}/nodes`, { httpsAgent });
             if (response.data && Array.isArray(response.data.nodes)) {
                 console.log(`Discovered ${response.data.nodes.length} nodes from service`);
                 return response.data.nodes;

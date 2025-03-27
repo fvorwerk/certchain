@@ -6,7 +6,7 @@ services:
     restart: always
     working_dir: /app
     command: >
-      sh -c "mkdir -p config && cp -r /app_source/config/* /app/config/ && npm install --production && node index.js"
+      sh -c "mkdir -p config && cp -r /app_source/config/* /app/config/ && npm install --production && NODE_TLS_REJECT_UNAUTHORIZED=0 node index.js"
     environment:
       - NODE_ID=${NODE_ID:-auto}
       - PORT=3000
@@ -17,6 +17,8 @@ services:
       - ADMIN_API_KEY=${ADMIN_API_KEY:-changeme}
       - SEED_NODES=${SEED_NODES:-https://node1.${DOMAIN_NAME}}
       - BLOCK_INTERVAL=${BLOCK_INTERVAL:-86400}
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - RESET_LEDGER=${RESET_LEDGER:-false}
     volumes:
       - ./:/app_source  # Mount source files to a different location
       - ./config:/app/config  # Explicitly mount config directory

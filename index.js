@@ -767,6 +767,32 @@ console.log(`Block generation interval set to ${BLOCK_INTERVAL/1000} seconds (${
 
 // Initialize blockchain and credit system
 console.log('Initializing blockchain...');
+
+// Check if we should reset the ledger
+if (process.env.RESET_LEDGER === 'true') {
+    console.log('RESET_LEDGER flag is set to true - resetting credit ledger...');
+    try {
+        const backupFile = path.join(__dirname, 'credit', `credit-ledger-backup-${Date.now()}.json`);
+        if (fs.existsSync(creditLedger.ledgerFile)) {
+            fs.copyFileSync(creditLedger.ledgerFile, backupFile);
+            console.log(`Previous ledger backed up to: ${path.basename(backupFile)}`);
+        }
+        
+        // Reset the ledger
+        creditLedger.tokens = new Map();
+        creditLedger.walletTokens = new Map();
+        creditLedger.saveLedger();
+        
+        console.log('Credit ledger has been reset to empty state');
+        
+        // Also reset blockchain if needed
+        blockchain.resetToGenesis();
+        console.log('Blockchain reset to genesis block');
+    } catch (error) {
+        console.error('Error resetting ledger:', error.message);
+    }
+}
+
 // Load peers from file
 loadPeersFromFile();
 

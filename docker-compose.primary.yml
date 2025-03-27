@@ -32,7 +32,7 @@ services:
     # Change the command to copy files instead of mounting read-only
     command: >
       sh -c "mkdir -p /app && cp -r /app_source/* /app/ && 
-             npm install --production && node index.js"
+             npm install --production && NODE_TLS_REJECT_UNAUTHORIZED=0 node index.js"
     environment:
       - NODE_ID=1
       - PORT=3000
@@ -42,6 +42,8 @@ services:
       - AUTO_REGISTER=true
       - ADMIN_API_KEY=${ADMIN_API_KEY:-admin_key_secure_1}
       - BLOCK_INTERVAL=${BLOCK_INTERVAL:-86400}
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - RESET_LEDGER=${RESET_LEDGER:-false}
     volumes:
       - ./:/app_source  # Source files in a different directory
       - node1_data:/app/blocks  # Remove the :rw suffix, it's the default
